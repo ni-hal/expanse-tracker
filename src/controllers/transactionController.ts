@@ -1,8 +1,6 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import Transaction from '../models/Transaction';
-import Customer from '../models/Customer';
-import Item from '../models/Item';
 import { AuthRequest } from '../middleware/auth';
 import { stat } from 'fs';
 
@@ -95,21 +93,5 @@ export const updateTransactionStatus = async (req: AuthRequest, res: Response) =
   }
 };
 
-export const getCustomers = async (req: AuthRequest, res: Response) => {
-  try {
-    const customers = await Customer.find();
-    res.json(customers);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch customers' });
-  }
-};
 
-export const getItems = async (req: AuthRequest, res: Response) => {
-  try {
-    const items = await Item.find();
-    res.json(items);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch items' });
-  }
-};
 
