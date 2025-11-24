@@ -6,22 +6,23 @@ import { stat } from 'fs';
 
 export const addTransaction = async (req: AuthRequest, res: Response) => {
   try {
-    const { date,  amount , itemName } = req.body;
+    const { date, amount, itemName } = req.body;
     
     const transaction = new Transaction({
       date,
       amount,
       itemName,
+    
       enteredBy: req.user?.id
     });
     await transaction.save();
     
     const populatedTransaction = await Transaction.findById(transaction._id)
-      .populate('enteredBy', 'username' );
+      .populate('enteredBy', 'username mobile');
     
-    res.status(200).json({ message: 'Transaction added', data:  populatedTransaction ,status: 'success' ,statusCode: 200}  );
+    res.status(200).json({ message: 'Transaction added', data: populatedTransaction, status: 'success', statusCode: 200 });
   } catch (error: any) {
-    res.status(400).json({ error: error.message || 'Failed to add transaction', status: 'error', statusCode: 400  } );
+    res.status(400).json({ error: error.message || 'Failed to add transaction', status: 'error', statusCode: 400 });
   }
 };
  
@@ -40,7 +41,7 @@ export const getAllTransactions = async (req: AuthRequest, res: Response) => {
     }
     
     const transactions = await Transaction.find(filter)
-      .populate("enteredBy", "username");
+      .populate("enteredBy", "username mobile");
     
     let filteredTransactions = transactions;
     
@@ -73,7 +74,7 @@ export const updateTransactionStatus = async (req: AuthRequest, res: Response) =
     const { id } = req.params;
     const { status } = req.body;
     
-    if (!['Approved', 'Rejected'].includes(status)) {
+    if (!['Completed', 'Pending'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
 

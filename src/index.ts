@@ -6,6 +6,7 @@ import db from './database';
 import authRoutes from './routes/auth';
 import transactionRoutes from './routes/transactions';
 import expenseRoutes from './routes/expenses';
+import reportRoutes from './routes/reports';
 
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(express.static('public'));
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/reports', reportRoutes);
 
 
 db.connect().then(() => {
