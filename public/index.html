@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Ledger & Expense Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        .hidden { display: none; }
+        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Smart Ledger & Expense Tracker</h1>
+        
+        <!-- Login Section -->
+        <div id="loginSection" class="section">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button onclick="login()">Login</button>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="hidden">
+            <div id="userInfo"></div>
+            
+            <!-- Admin Panel -->
+            <div id="adminPanel" class="hidden section">
+                <h2>Create User</h2>
+                <div class="form-group">
+                    <label>Full Name:</label>
+                    <input type="text" id="newUserName" required>
+                </div>
+                <div class="form-group">
+                    <label>Username:</label>
+                    <input type="text" id="newUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>Mobile:</label>
+                    <input type="text" id="newMobile" required>
+                </div>
+                <div class="form-group">
+                    <label>Role:</label>
+                    <select id="newRole">
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <button onclick="createUser()">Create User</button>
+            </div>
+
+            <!-- Transaction Form -->
+            <div class="section">
+                <h2>Add Transaction</h2>
+                <div class="form-group">
+                    <label>Date:</label>
+                    <input type="date" id="transactionDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Customer Name:</label>
+                    <input type="text" id="customerName" required>
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number:</label>
+                    <input type="text" id="customerMobile" required>
+                </div>
+                <div class="form-group">
+                    <label>Item Name:</label>
+                    <input type="text" id="itemName" required>
+                </div>
+                <div class="form-group">
+                    <label>Amount:</label>
+                    <input type="number" step="0.01" id="amount" required>
+                </div>
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="status">
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <button onclick="addTransaction()">Save Transaction</button>
+            </div>
+
+            <!-- Expense Form -->
+            <div class="section">
+                <h2>Add Expense</h2>
+                <div class="form-group">
+                    <label>Date:</label>
+                    <input type="date" id="expenseDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Title:</label>
+                    <input type="text" id="expenseTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="expenseDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Amount:</label>
+                    <input type="number" step="0.01" id="expenseAmount" required>
+                </div>
+                <button onclick="addExpense()">Add Expense</button>
+            </div>
+
+            <!-- Financial Summary -->
+            <div class="section">
+                <h2>Financial Summary</h2>
+                <button onclick="getFinancialSummary()">Refresh Summary</button>
+                <div id="financialSummary"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let token = '';
+        let currentUser = null;
+
+        // Set today's date as default
+        document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    token = data.token;
+                    currentUser = data.user;
+                    showDashboard();
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                alert('Login failed');
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('userInfo').innerHTML = `<h3>Welcome, ${currentUser.username} (${currentUser.role})</h3>`;
+            
+            if (currentUser.role === 'Admin') {
+                document.getElementById('adminPanel').classList.remove('hidden');
+            }
+        }
+
+        async function createUser() {
+            const userData = {
+                fullName: document.getElementById('newUserName').value,
+                username: document.getElementById('newUsername').value,
+                password: document.getElementById('newPassword').value,
+                mobile: document.getElementById('newMobile').value,
+                role: document.getElementById('newRole').value
+            };
+
+            try {
+                const response = await fetch('/api/auth/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+                alert(data.message || data.error);
+            } catch (error) {
+                alert('Failed to create user');
+            }
+        }
+
+        async function addTransaction() {
+            const transactionData = {
+                date: document.getElementById('transactionDate').value,
+                customerName: document.getElementById('customerName').value,
+                customerMobile: document.getElementById('customerMobile').value,
+                itemName: document.getElementById('itemName').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                status: document.getElementById('status').value
+            };
+
+            try {
+                const response = await fetch('/api/transactions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(transactionData)
+                });
+
+                const data = await response.json();
+                alert(data.message || data.error);
+            } catch (error) {
+                alert('Failed to add transaction');
+            }
+        }
+
+        async function addExpense() {
+            const expenseData = {
+                date: document.getElementById('expenseDate').value,
+                title: document.getElementById('expenseTitle').value,
+                description: document.getElementById('expenseDescription').value,
+                amount: parseFloat(document.getElementById('expenseAmount').value)
+            };
+
+            try {
+                const response = await fetch('/api/expenses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(expenseData)
+                });
+
+                const data = await response.json();
+                alert(data.message || data.error);
+            } catch (error) {
+                alert('Failed to add expense');
+            }
+        }
+
+        async function getFinancialSummary() {
+            try {
+                const response = await fetch('/api/reports/financial-summary', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                document.getElementById('financialSummary').innerHTML = `
+                    <p>Total Income: $${data.totalIncome}</p>
+                    <p>Total Pending: $${data.totalPending}</p>
+                    <p>Total Expense: $${data.totalExpense}</p>
+                    <p>Net Balance: $${data.netBalance}</p>
+                `;
+            } catch (error) {
+                alert('Failed to fetch financial summary');
+            }
+        }
+    </script>
+</body>
+</html>
