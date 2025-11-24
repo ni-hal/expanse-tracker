@@ -24,7 +24,8 @@ export const login = async (req: Request, res: Response) => {
     res.json({ token, user: { id: user._id, username: user.username, role: user.role ,  statuscode:200,message:"login successful" } });
 
   
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
   }
 };
@@ -50,7 +51,8 @@ export const registerAdmin = async (req: Request, res: Response) => {
       statusCode: 201,
       data: admin
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Register admin error:', error);
     res.status(500).json({ error: 'Failed to register admin', statusCode: 500, data: null });
   }
 };
@@ -58,6 +60,15 @@ export const registerAdmin = async (req: Request, res: Response) => {
 export const createUser = async (req: AuthRequest, res: Response) => {
   try {
     const { username, email, password, mobile } = req.body;
+    
+    if (!username || !email || !password || !mobile) {
+      return res.status(400).json({ error: 'All fields are required', statusCode: 400 });
+    }
+
+    const existingUser = await Admin.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already exists', statusCode: 400 });
+    }
     
     const hashedPassword = await bcrypt.hash(password, 10);
     
@@ -75,7 +86,11 @@ export const createUser = async (req: AuthRequest, res: Response) => {
       statusCode: 201,
       data: { id: user._id, username: user.username, email: user.email, role: user.role }
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Create user error:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({ error: 'Email already exists', statusCode: 400 });
+    }
     res.status(500).json({ error: 'Failed to create user', statusCode: 500 });
   }
 };

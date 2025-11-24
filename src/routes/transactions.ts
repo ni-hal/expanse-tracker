@@ -1,12 +1,13 @@
-import { Router } from 'express';
-import { addTransaction, updatePaymentStatus, getPendingTransactions, getDailyTransactions, getAllTransactions } from '../controllers/transactionController';
-import { authenticateToken } from '../middleware/auth';
+import express from 'express';
+import { addTransaction, getAllTransactions, updateTransactionStatus, getCustomers, getItems } from '../controllers/transactionController';
+import { authenticateToken, requireAdmin } from '../middleware/auth';
 
-const router = Router();
+const router = express.Router();
 
 router.post('/', authenticateToken, addTransaction);
-router.put('/:id/payment', authenticateToken, updatePaymentStatus);
-
-router.get('/', authenticateToken, getAllTransactions);
+router.get('/', authenticateToken, requireAdmin, getAllTransactions);
+router.put('/:id/status', authenticateToken, requireAdmin, updateTransactionStatus);
+router.get('/customers', authenticateToken, getCustomers);
+router.get('/items', authenticateToken, getItems);
 
 export default router;

@@ -18,7 +18,6 @@ app.use(express.json());
 app.use(express.static('public'));
 
 app.use('/api/auth', authRoutes);
-
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/reports', reportRoutes);

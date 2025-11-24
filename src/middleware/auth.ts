@@ -29,4 +29,11 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
   next();
 };
 
+export const requireStaff = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.user?.role !== 'User') {
+    return res.status(403).json({ error: 'Staff access required' });
+  }
+  next();
+};
+
 export { JWT_SECRET };
